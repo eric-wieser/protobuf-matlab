@@ -485,7 +485,7 @@ void MatlabGenerator::PrintReadBody(Printer & printer,
   string descriptor_function = DescriptorFunctionName(descriptor);
   printer.Print("descriptor = $descriptor_function$();\n",
                 "descriptor_function", descriptor_function);
-  printer.Print("$name$ = pblib_generic_parse_from_string(buffer, descriptor, buffer_start, buffer_end);\n",
+  printer.Print("$name$ = pblib.generic_parse_from_string(buffer, descriptor, buffer_start, buffer_end);\n",
                 "name", name);
   printer.Print("$name$.descriptor_function = @$descriptor_function$;\n",
                 "name", name, "descriptor_function", descriptor_function);
@@ -573,29 +573,29 @@ string MatlabGenerator::MakeReadFunctionHandle(
   string function_handle;
   switch(type) {
     case MATLABTYPE_INT32:
-      // We must call pblib_helpers_first because the standard varint
+      // We must call pblib.helpers_first because the standard varint
       // will put the result into a uint64
       //
       // We must also figure out whether this is encoded using the ZigZag
       // encoding, which is the case if its type was specificied as sint32 or
       // sint64
       if (proto_type == FieldDescriptor::TYPE_SINT32) {
-        return "@(x) pblib_helpers_first(typecast(pblib_helpers_iff(bitget(x, 1), bitset(bitshift(bitxor(intmax('uint64'), x), -1), 64), bitshift(x, -1)), 'int32'))";
+        return "@(x) pblib.helpers_first(typecast(pblib.helpers_iff(bitget(x, 1), bitset(bitshift(bitxor(intmax('uint64'), x), -1), 64), bitshift(x, -1)), 'int32'))";
       } else {
-        return "@(x) pblib_helpers_first(typecast(x, 'int32'))";
+        return "@(x) pblib.helpers_first(typecast(x, 'int32'))";
       }
     case MATLABTYPE_INT64:
       // We must figure out whether this is encoded using the ZigZag encoding,
       // which is the case if its type was specificied as sint32 or sint64
       if (proto_type == FieldDescriptor::TYPE_SINT64) {
-        return "@(x) typecast(pblib_helpers_iff(bitget(x, 1), bitset(bitshift(bitxor(intmax('uint64'), x), -1), 64), bitshift(x, -1)), 'int64')";
+        return "@(x) typecast(pblib.helpers_iff(bitget(x, 1), bitset(bitshift(bitxor(intmax('uint64'), x), -1), 64), bitshift(x, -1)), 'int64')";
       } else {
         return "@(x) typecast(x, 'int64')";
       }
     case MATLABTYPE_UINT32:
-      // We must call pblib_helpers_first because the standard varint
+      // We must call pblib.helpers_first because the standard varint
       // will put the result into a uint64
-      return "@(x) pblib_helpers_first(typecast(x, 'uint32'))";
+      return "@(x) pblib.helpers_first(typecast(x, 'uint32'))";
     case MATLABTYPE_UINT64:
       return "@(x) typecast(x, 'uint64')";
     case MATLABTYPE_DOUBLE:
@@ -609,9 +609,9 @@ string MatlabGenerator::MakeReadFunctionHandle(
     case MATLABTYPE_MESSAGE:
       return "@(x) " + ReadFunctionName(*field.message_type()) + "(x{1}, x{2}, x{3})";
     case MATLABTYPE_ENUM:
-      // We must call pblib_helpers_first because the standard varint
+      // We must call pblib.helpers_first because the standard varint
       // will put the result into a uint64
-      return "@(x) pblib_helpers_first(typecast(x, 'int32'))";
+      return "@(x) pblib.helpers_first(typecast(x, 'int32'))";
   }
   GOOGLE_LOG(FATAL) << "Shouldn't get here since switch should catch all cases.";
   return "";
@@ -639,7 +639,7 @@ string MatlabGenerator::MakeWriteFunctionHandle(const FieldDescriptor & field) c
         case FieldDescriptor::TYPE_SFIXED32:
           return "@(x) typecast(int32(x), 'uint8')";
         case FieldDescriptor::TYPE_SINT32:
-          return "@(x) typecast(pblib_helpers_iff(int32(x) < 0, -2 * int32(x) - 1, 2 * int32(x)), 'uint32')";
+          return "@(x) typecast(pblib.helpers_iff(int32(x) < 0, -2 * int32(x) - 1, 2 * int32(x)), 'uint32')";
       }
       GOOGLE_LOG(DFATAL)<<"Unhandled matlabtype_int32 type "<<type<<" in WriteFunctionHandle.";
       break;
@@ -654,7 +654,7 @@ string MatlabGenerator::MakeWriteFunctionHandle(const FieldDescriptor & field) c
         case FieldDescriptor::TYPE_SFIXED64:
           return "@(x) typecast(int64(x), 'uint8')";
         case FieldDescriptor::TYPE_SINT64:
-          return "@(x) pblib_helpers_iff(int64(x) < 0, bitxor(bitshift(typecast(int64(x), 'uint64'), 1), intmax('uint64')), bitshift(typecast(int64(x), 'uint64'), 1))";
+          return "@(x) pblib.helpers_iff(int64(x) < 0, bitxor(bitshift(typecast(int64(x), 'uint64'), 1), intmax('uint64')), bitshift(typecast(int64(x), 'uint64'), 1))";
       }
       GOOGLE_LOG(DFATAL)<<"Unhandled matlabtype_int32 type "<<type<<" in WriteFunctionHandle.";
       break;
@@ -686,9 +686,9 @@ string MatlabGenerator::MakeWriteFunctionHandle(const FieldDescriptor & field) c
     case MATLABTYPE_BYTES:
       return "@uint8";
     case MATLABTYPE_MESSAGE:
-      return "@pblib_generic_serialize_to_string";
+      return "@pblib.generic_serialize_to_string";
     case MATLABTYPE_ENUM:
-      // We must call pblib_helpers_first because the standard varint
+      // We must call pblib.helpers_first because the standard varint
       // will put the result into a uint64
       return "@(x) typecast(int32(x), 'uint32')";
   }
